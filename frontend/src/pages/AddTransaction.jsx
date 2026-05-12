@@ -1,27 +1,47 @@
 import React, { useState } from 'react';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import transactionService from '../services/transactionService';
 
 const AddTransaction = () => {
   const navigate = useNavigate();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    text: '',
+    amount: '',
+    category: '',
+    type: 'expense'
+  });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 1500);
+    setLoading(true);
+    try {
+      await transactionService.addTransaction({
+        ...formData,
+        amount: parseFloat(formData.amount)
+      });
+      setIsSubmitted(true);
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+      alert('Failed to add transaction. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (isSubmitted) {
     return (
-      <div className="flex-col items-center justify-center" style={{ height: '70vh' }}>
-        <div style={{ background: 'var(--success-bg)', padding: '1rem', borderRadius: '50%', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', itemsCenter: 'center', justifyContent: 'center', height: '70vh' }}>
+        <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '50%', marginBottom: '1.5rem', alignSelf: 'center' }}>
           <CheckCircle2 size={48} color="var(--success)" />
         </div>
-        <h2 className="title" style={{ fontSize: '1.5rem' }}>Transaction Added!</h2>
-        <p className="text-muted">Redirecting to dashboard...</p>
+        <h2 className="title" style={{ fontSize: '1.5rem', textAlign: 'center' }}>Transaction Added!</h2>
+        <p className="text-muted" style={{ textAlign: 'center' }}>Redirecting to dashboard...</p>
       </div>
     );
   }
@@ -43,31 +63,40 @@ const AddTransaction = () => {
           <div className="flex-col gap-2">
             <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Type</label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <label style={{
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '1rem',
-                textAlign: 'center',
-                cursor: 'pointer',
-                background: 'rgba(239, 68, 68, 0.1)',
-                color: 'var(--danger)',
-                fontWeight: 600
-              }}>
-                <input type="radio" name="type" value="expense" defaultChecked style={{ display: 'none' }} />
+              <button
+                type="button"
+                onClick={() => setFormData({...formData, type: 'expense'})}
+                style={{
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '1rem',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: formData.type === 'expense' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.02)',
+                  color: formData.type === 'expense' ? 'var(--danger)' : 'white',
+                  fontWeight: formData.type === 'expense' ? 600 : 400,
+                  transition: 'all 0.2s'
+                }}
+              >
                 Expense
-              </label>
-              <label style={{
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '1rem',
-                textAlign: 'center',
-                cursor: 'pointer',
-                background: 'rgba(255,255,255,0.02)',
-                color: 'white',
-              }}>
-                <input type="radio" name="type" value="income" style={{ display: 'none' }} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({...formData, type: 'income'})}
+                style={{
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '1rem',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: formData.type === 'income' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                  color: formData.type === 'income' ? 'var(--success)' : 'white',
+                  fontWeight: formData.type === 'income' ? 600 : 400,
+                  transition: 'all 0.2s'
+                }}
+              >
                 Income
-              </label>
+              </button>
             </div>
           </div>
 
@@ -80,43 +109,73 @@ const AddTransaction = () => {
                 step="0.01" 
                 placeholder="0.00" 
                 className="w-full" 
+                value={formData.amount}
+                onChange={(e) => setFormData({...formData, amount: e.target.value})}
                 required 
                 style={{ fontSize: '1.5rem', paddingLeft: '2.5rem', fontWeight: 600 }}
               />
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div className="flex-col gap-2">
-              <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Category</label>
-              <select className="w-full" required style={{ padding: '0.85rem 1rem' }}>
-                <option value="">Select category...</option>
-                <option value="food">🍔 Food & Dining</option>
-                <option value="transport">🚗 Transport</option>
-                <option value="shopping">🛍️ Shopping</option>
-                <option value="entertainment">🎬 Entertainment</option>
-                <option value="housing">🏠 Housing</option>
-                <option value="utilities">⚡ Utilities</option>
-                <option value="other">📦 Other</option>
-              </select>
-            </div>
-
-            <div className="flex-col gap-2">
-              <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Date</label>
-              <input type="date" className="w-full" defaultValue={new Date().toISOString().split('T')[0]} required style={{ padding: '0.85rem 1rem' }} />
-            </div>
+          <div className="flex-col gap-2">
+            <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Category</label>
+            <select 
+              className="w-full" 
+              value={formData.category}
+              onChange={(e) => setFormData({...formData, category: e.target.value})}
+              required 
+              style={{ padding: '0.85rem 1rem' }}
+            >
+              <option value="">Select category...</option>
+              <option value="Food">🍔 Food & Dining</option>
+              <option value="Transport">🚗 Transport</option>
+              <option value="Shopping">🛍️ Shopping</option>
+              <option value="Entertainment">🎬 Entertainment</option>
+              <option value="Rent">🏠 Rent/Housing</option>
+              <option value="Health">🏥 Health</option>
+              <option value="Salary">💰 Salary</option>
+              <option value="Other">📦 Other</option>
+            </select>
           </div>
 
           <div className="flex-col gap-2">
-            <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Description (Optional)</label>
-            <textarea placeholder="What was this for?" rows="3" className="w-full"></textarea>
+            <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Description</label>
+            <textarea 
+              placeholder="What was this for?" 
+              rows="3" 
+              className="w-full"
+              value={formData.text}
+              onChange={(e) => setFormData({...formData, text: e.target.value})}
+              required
+            ></textarea>
           </div>
 
-          <button type="submit" className="btn btn-primary w-full" style={{ padding: '1rem', marginTop: '1rem' }}>
-            Save Transaction
+          <button 
+            type="submit" 
+            className="btn btn-primary w-full" 
+            style={{ padding: '1rem', marginTop: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                Saving...
+              </>
+            ) : (
+              'Save Transaction'
+            )}
           </button>
         </form>
       </div>
+      <style dangerouslySetInnerHTML={{__html: `
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}} />
     </div>
   );
 };

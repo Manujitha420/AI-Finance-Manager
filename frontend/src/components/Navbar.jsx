@@ -1,7 +1,10 @@
 import React from 'react';
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
+  const { user, logout } = useAuth();
+
   return (
     <header style={{
       height: '80px',
@@ -41,7 +44,7 @@ const Navbar = () => {
         <button className="btn-secondary" style={{ padding: '0.5rem', borderRadius: '50%' }}>
           <Bell size={20} />
         </button>
-        <div className="flex items-center gap-3" style={{ cursor: 'pointer' }}>
+        <div className="flex items-center gap-3">
           <div style={{ 
             width: '40px', 
             height: '40px', 
@@ -53,12 +56,26 @@ const Navbar = () => {
             fontWeight: '600',
             color: 'white'
           }}>
-            MR
+            {user?.name?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="flex-col">
-            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Manujitha</span>
+            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{user?.name || 'User'}</span>
             <span className="text-muted" style={{ fontSize: '0.75rem' }}>Pro Plan</span>
           </div>
+          <button 
+            onClick={logout}
+            className="btn-secondary" 
+            style={{ 
+              padding: '0.5rem', 
+              marginLeft: '0.5rem', 
+              borderRadius: 'var(--radius-sm)',
+              color: 'var(--danger)',
+              border: '1px solid rgba(239, 68, 68, 0.2)'
+            }}
+            title="Logout"
+          >
+            <LogOut size={18} />
+          </button>
         </div>
       </div>
     </header>
